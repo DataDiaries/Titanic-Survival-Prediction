@@ -12,47 +12,79 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import precision_score, recall_score
 from sklearn.metrics import roc_auc_score
 
-# ... (Your existing code for data loading, preprocessing, and model building) ...
+# Load the Titanic datasets
+train = pd.read_csv('Titanic_train.csv')
+test = pd.read_csv('Titanic_test.csv')
 
+# Streamlit app
 st.title("Titanic Survival Prediction")
 
-# Sidebar for user input
-st.sidebar.header("Passenger Information")
-pclass = st.sidebar.selectbox("Passenger Class", [1, 2, 3])
-sex = st.sidebar.selectbox("Sex", ["male", "female"])
-age = st.sidebar.number_input("Age", min_value=0, max_value=100, value=25)
-sibsp = st.sidebar.number_input("Number of Siblings/Spouses", min_value=0, value=0)
-parch = st.sidebar.number_input("Number of Parents/Children", min_value=0, value=0)
-fare = st.sidebar.number_input("Fare", min_value=0.0, value=10.0)
-embarked = st.sidebar.selectbox("Embarked", ["S", "C", "Q"])
+# Data Exploration Section
+st.header("Data Exploration")
 
-# Create a dictionary with user input
-user_input = {
-    "Pclass": pclass,
-    "Sex": 0 if sex == "male" else 1,
-    "Age": age,
-    "SibSp": sibsp,
-    "Parch": parch,
-    "Fare": fare,
-    "Embarked": 0 if embarked == "S" else (1 if embarked == "C" else 2)
-}
+if st.checkbox("Show Dataset Head"):
+    st.write(train.head())
 
-# Convert user input to DataFrame
-input_df = pd.DataFrame([user_input])
+if st.checkbox("Show Summary Statistics"):
+    st.write(train.describe())
 
-# Make prediction
-prediction = model.predict(input_df)[0]
+if st.checkbox("Show Null Value Counts"):
+    st.write(train.isnull().sum())
 
-# Display prediction
-st.header("Prediction")
-if prediction == 1:
-    st.write("The passenger is predicted to have survived.")
-else:
-    st.write("The passenger is predicted to not have survived.")
+# Visualization Section
+st.header("Visualizations")
 
+# Plot for No. of people who survived and who didn't
+st.subheader("Survival Counts")
+fig, ax = plt.subplots()
+sns.countplot(x='Survived', data=train, palette='cool', ax=ax)
+st.pyplot(fig)
 
-# ... (Add more sections for visualizations and analysis) ...
+# People who survived based on age
+st.subheader("Age Distribution")
+fig, ax = plt.subplots()
+train["Age"].hist(ax=ax)
+st.pyplot(fig)
 
-# Example: Display the feature importance table
-st.header("Feature Importance")
-st.write(coefficients_df)
+# Siblings/Spouses aboard the ship
+st.subheader("Siblings/Spouses")
+fig, ax = plt.subplots()
+sns.countplot(x="SibSp", data=train, ax=ax)
+st.pyplot(fig)
+
+# ... (Add other plots as needed)
+
+# Model Building and Evaluation Section
+st.header("Model Building and Evaluation")
+
+# Data Pre-processing steps (similar to your original code)
+# ...
+
+# Model Training
+# ...
+
+# Model Evaluation
+# ...
+
+# Display the confusion matrix
+# ...
+
+# Display AUC Score
+# ...
+
+# Interpretation Section
+st.header("Interpretation of Results")
+# Display the coefficients_df
+# ...
+
+# Add any additional interpretation or insights based on the model results
+# ...
+
+# Deployment Instructions
+st.header("Deployment Instructions")
+st.markdown("""
+To deploy this app to Streamlit, follow these steps:
+
+1. **Install Streamlit:** `pip install streamlit`
+2. **Run the app:** `streamlit run app.py`
+""")
