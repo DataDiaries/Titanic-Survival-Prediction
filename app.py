@@ -1,90 +1,85 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.model_selection import train_test_split as tts
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report
-import sklearn.metrics as metrics
-from sklearn.model_selection import cross_val_predict
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import precision_score, recall_score
-from sklearn.metrics import roc_auc_score
 
-# Load the Titanic datasets
+
+# Load the Titanic dataset (replace with your actual dataset path)
 train = pd.read_csv('Titanic_train.csv')
 test = pd.read_csv('Titanic_test.csv')
 
+
+# Preprocessing functions (similar to your existing code)
+def impute_age(cols):
+    Age = cols[0]
+    Pclass = cols[1]
+    if pd.isnull(Age):
+        if Pclass == 1:
+            return 37
+        elif Pclass == 2:
+            return 29
+        else:
+            return 24
+    else:
+        return Age
+
+
+# Data Preprocessing
+train['Age'] = train[['Age', 'Pclass']].apply(impute_age, axis=1)
+test['Age'] = test[['Age', 'Pclass']].apply(impute_age, axis=1)
+train.drop('Cabin', axis='columns', inplace=True)
+test.drop('Cabin', axis='columns', inplace=True)
+test.dropna(inplace=True)
+train['Embarked'] = train['Embarked'].fillna('S')
+train.replace({'Sex': {'male': 0, 'female': 1}, 'Embarked': {'S': 0, 'C': 1, 'Q': 2}}, inplace=True)
+X = train.drop(['PassengerId', 'Name', 'Ticket', 'Survived'], axis=1)
+y = train['Survived']
+X_train, X_test, y_train, y_test = tts(X, y, test_size=0.25, random_state=42)
+
+
+# Train the model
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+
 # Streamlit app
-st.title("Titanic Survival Prediction")
+st.title('Titanic Survival Prediction')
 
-# Data Exploration Section
-st.header("Data Exploration")
 
-if st.checkbox("Show Dataset Head"):
-    st.write(train.head())
+# Create input fields for user
+pclass = st.selectbox('Pclass', [1, 2, 3])
+sex = st.selectbox('Sex', ['male', 'female'])
+age = st.number_input('Age', min_value=0, max_value=100, value=30)
+sibsp = st.number_input('Number of Siblings/Spouses', min_value=0, value=0)
+parch = st.number_input('Number of Parents/Children', min_value=0, value=0)
+fare = st.number_input('Fare', min_value=0.0, value=10.0)
+embarked = st.selectbox('Embarked', ['S', 'C', 'Q'])
 
-if st.checkbox("Show Summary Statistics"):
-    st.write(train.describe())
 
-if st.checkbox("Show Null Value Counts"):
-    st.write(train.isnull().sum())
+# Preprocess user input
+sex_encoded = 1 if sex == 'female' else 0
+embarked_encoded = 0 if embarked == 'S' else (1 if embarked == 'C' else 2)
 
-# Visualization Section
-st.header("Visualizations")
+user_input = pd.DataFrame({
+    'Pclass': [pclass],
+    'Sex': [sex_encoded],
+    'Age': [age],
+    'SibSp': [sibsp],
+    'Parch': [parch],
+    'Fare': [fare],
+    'Embarked': [embarked_encoded]
+})
 
-# Plot for No. of people who survived and who didn't
-st.subheader("Survival Counts")
-fig, ax = plt.subplots()
-sns.countplot(x='Survived', data=train, palette='cool', ax=ax)
-st.pyplot(fig)
 
-# People who survived based on age
-st.subheader("Age Distribution")
-fig, ax = plt.subplots()
-train["Age"].hist(ax=ax)
-st.pyplot(fig)
+# Make prediction
+prediction = model.predict(user_input)
 
-# Siblings/Spouses aboard the ship
-st.subheader("Siblings/Spouses")
-fig, ax = plt.subplots()
-sns.countplot(x="SibSp", data=train, ax=ax)
-st.pyplot(fig)
 
-# ... (Add other plots as needed)
+# Display prediction
+if st.button('Predict'):
+    if prediction[0] == 1:
+        st.success('Passenger would likely survive.')
+    else:
+        st.error('Passenger would likely not survive.')
 
-# Model Building and Evaluation Section
-st.header("Model Building and Evaluation")
-
-# Data Pre-processing steps (similar to your original code)
-# ...
-
-# Model Training
-# ...
-
-# Model Evaluation
-# ...
-
-# Display the confusion matrix
-# ...
-
-# Display AUC Score
-# ...
-
-# Interpretation Section
-st.header("Interpretation of Results")
-# Display the coefficients_df
-# ...
-
-# Add any additional interpretation or insights based on the model results
-# ...
-
-# Deployment Instructions
-st.header("Deployment Instructions")
-st.markdown("""
-To deploy this app to Streamlit, follow these steps:
-
-1. **Install Streamlit:** `pip install streamlit`
-2. **Run the app:** `streamlit run app.py`
-""")
