@@ -1,6 +1,6 @@
 streamlit
 pickle5
-matplotlib
+matplotlib.pyplot
 pandas
 seaborn
 scikit-learn
